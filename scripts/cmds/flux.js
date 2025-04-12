@@ -86,3 +86,4 @@ module.exports = {
 };
 const wrapper = new GoatWrapper(module.exports);
 wrapper.applyNoPrefix({ allowPrefix: true });
+    
