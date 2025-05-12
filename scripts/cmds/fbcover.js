@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const baseApiUrl = async () => {
   const base = await axios.get(
-    "https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json",
+    "https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json",
   );
   return base.data.api;
 };
@@ -13,7 +13,7 @@ module.exports.config = {
   role: 0,
   author: "Dipto",
   description: "Facebook cover",
-  category: "Cover",
+  category: "image",
   guide: {
     en: "name - title - address - email - phone - color (default = white)",
   },
@@ -48,7 +48,7 @@ module.exports.onStart = async function ({ api, event, args, usersData }) {
     const color = msg[6]?.trim() || "white";
 
     api.sendMessage(
-      `Processing your cover, Wait koro baby < 😘`,
+      `Processing your cover, Wait a minute < 😘`,
       event.threadID,
       (err, info) =>
         setTimeout(() => {
@@ -63,7 +63,7 @@ module.exports.onStart = async function ({ api, event, args, usersData }) {
       const attachment = response.data;
       api.sendMessage(
         {
-          body: `✿━━━━━━━━━━━━━━━━━━━━━━━━━━━✿\n🔵𝗙𝗜𝗥𝗦𝗧 𝗡𝗔𝗠𝗘: ${name}\n⚫𝗦𝗘𝗖𝗢𝗡𝗗 𝗡𝗔𝗠𝗘:${subname}\n⚪𝗔𝗗𝗗𝗥𝗘𝗦𝗦: ${address}\n📫𝗠𝗔𝗜𝗟: ${email}\n☎️𝗣𝗛𝗢𝗡𝗘 𝗡𝗢.: ${phone}\n☢️𝗖𝗢𝗟𝗢𝗥: ${color}\n💁𝗨𝗦𝗘𝗥 𝗡𝗔𝗠𝗘: ${nam.name}\n✅𝗩𝗲𝗿𝘀𝗶𝗼𝗻 : ${v}\n✿━━━━━━━━━━━━━━━━━━━━━━━━━━━✿`,
+          body: `✿━━━━━━━━━━━━━━━━━━━━━━━━━━━✿\n🔵𝗙𝗜𝗥𝗦𝗧 𝗡𝗔𝗠𝗘: ${name}\n⚫𝗦𝗘𝗖𝗢𝗡𝗗 𝗡𝗔𝗠𝗘:${subname}\n⚪𝗔𝗗𝗗𝗥𝗘𝗦𝗦: ${address}\n📫𝗠𝗔𝗜𝗟: ${email}\n☎️𝗣𝗛𝗢𝗡𝗘 𝗡𝗢.: ${phone}\n☢️𝗖𝗢𝗟𝗢𝗥: ${color}\n💁𝗨𝗦𝗘𝗥 𝗡𝗔𝗠𝗘: ${nam.name}\n✅𝗩𝗲𝗿𝘀𝗶𝗼𝗻 : ${v}\nfvcover made by :—͟͟͞͞𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️\n✿━━━━━━━━━━━━━━━━━━━━━━━━━━━✿`,
           attachment,
         },
         event.threadID,

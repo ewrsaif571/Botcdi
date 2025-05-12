@@ -1,77 +1,58 @@
 const axios = require("axios");
+const fs = require("fs");
+
+const baseApiUrl = async () => {
+    const base = 'https://mahmud-emoji.onrender.com';
+    return base;
+};
 
 module.exports = {
 	config: {
 		name: "emojimix",
-		version: "1.4",
-		author: "NTKhang",
+		aliases: ["mix"],
+		version: "1.7",
+		author: "MahMUD",
 		countDown: 5,
 		role: 0,
-		description: {
-			vi: "Mix 2 emoji lại với nhau",
-			en: "Mix 2 emoji together"
-		},
-		guide: {
-			vi: "   {pn} <emoji1> <emoji2>"
-				+ "\n   Ví dụ:  {pn} 🤣 🥰",
-			en: "   {pn} <emoji1> <emoji2>"
-				+ "\n   Example:  {pn} 🤣 🥰"
-		},
+		guide: " {pn} <emoji1> <emoji2>\n Example: {pn} 🙂 😘",
 		category: "fun"
 	},
 
 	langs: {
-		vi: {
-			error: "Rất tiếc, emoji %1 và %2 không mix được",
-			success: "Emoji %1 và %2 mix được %3 ảnh"
-		},
 		en: {
 			error: "Sorry, emoji %1 and %2 can't mix",
-			success: "Emoji %1 and %2 mix %3 images"
+			success: "Emoji %1 and %2 mix successfully"
 		}
 	},
 
 	onStart: async function ({ message, args, getLang }) {
-		const readStream = [];
 		const emoji1 = args[0];
 		const emoji2 = args[1];
 
 		if (!emoji1 || !emoji2)
 			return message.SyntaxError();
 
-		const generate1 = await generateEmojimix(emoji1, emoji2);
-		const generate2 = await generateEmojimix(emoji2, emoji1);
-
-		if (generate1)
-			readStream.push(generate1);
-		if (generate2)
-			readStream.push(generate2);
-
-		if (readStream.length == 0)
+		const base = await baseApiUrl();
+		const image = await generateEmojimix(emoji1, emoji2, base);
+		if (!image)
 			return message.reply(getLang("error", emoji1, emoji2));
 
 		message.reply({
-			body: getLang("success", emoji1, emoji2, readStream.length),
-			attachment: readStream
+			body: getLang("success", emoji1, emoji2),
+			attachment: image
 		});
 	}
 };
 
-
-
-async function generateEmojimix(emoji1, emoji2) {
+async function generateEmojimix(emoji1, emoji2, base) {
 	try {
-		const { data: response } = await axios.get("https://goatbotserver.onrender.com/taoanhdep/emojimix", {
-			params: {
-				emoji1,
-				emoji2
-			},
+		const { data: response } = await axios.get(`${base}/mix2`, {
+			params: { emoji1, emoji2 },
 			responseType: "stream"
 		});
 		response.path = `emojimix${Date.now()}.png`;
 		return response;
-	}
-	catch (e) {
+	} catch (e) {
 		return null;
 	}
-}
+	}

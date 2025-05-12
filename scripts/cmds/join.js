@@ -1,56 +1,168 @@
+const axios = require("axios");
+const fs = require("fs-extra");
+const request = require("request");
+
 module.exports = {
   config: {
     name: "join",
-    aliases: ['addme', 'joinme'],
-    version: "1.0",
-    author: "𝐀𝐒𝐈𝐅 𝐱𝟔𝟗",
+    version: "3.0",
+    author: "Vex_Kshitiz",
     countDown: 5,
-    role: 0,
-    shortDescription: {
-      en: "Add user to support group",
-    },
-    longDescription: {
-      en: "This command adds the user to the group wher bot exist",
-    },
-    category: "Owner",
+    role: 2,
+    shortDescription: "Join the group that bot is in",
+    longDescription: "",
+    category: "owner",
     guide: {
-      en: "To use this command, simply type !join <threadID>.",
+      en: "{p}{n}",
     },
   },
 
-  onStart: async function ({ api, args, message, event }) {
-    const fuck = args.join(' ');
-    const permission = global.GoatBot.config.GOD;
-    if (!permission.includes(event.senderID)) {
-      api.sendMessage(fuck, event.threadID, event.messageID);
-      return;
-    }
-    const supportGroupId = args[0];
-    if (!supportGroupId) {
-      api.sendMessage("Please provide the support group ID.", event.threadID);
-      return;
-    }
-    const threadID = event.threadID;
-    const userID = event.senderID;
-    const threadInfo = await api.getThreadInfo(supportGroupId);
-    const participantIDs = threadInfo.participantIDs;
-    if (participantIDs.includes(userID)) {
-      api.sendMessage(
-        "You are already in this group. If you didn't find it, please check your message requests or spam box.",
-        threadID
+  onStart: async function ({ api, event }) {
+    try {
+      const groupList = await api.getThreadList(300, null, ["INBOX"]);
+
+      const filteredList = groupList.filter(
+        (group) => group.threadName !== null || group.name !== null
       );
-    } else {
-      api.addUserToGroup(userID, supportGroupId, (err) => {
-        if (err) {
-          console.error("Failed to add user to support group:", err);
-          api.sendMessage("I can't add you because your id is not allowed message request or your account is private. please add me then try again...", threadID);
-        } else {
-          api.sendMessage(
-            "You have been added to this group. If you didn't find the box in your inbox, please check your message requests or spam box.",
-            threadID
-          );
-        }
-      });
+
+      if (filteredList.length === 0) {
+        api.sendMessage("No group chats found.", event.threadID);
+      } else {
+        const formattedList = filteredList.map(
+          (group, index) =>
+            `${index + 1}. ${group.threadName || group.name}\n𝐓𝐈𝐃: ${group.threadID}`
+        );
+
+        const start = 0;
+        const currentList = formattedList.slice(start, start + 5);
+
+        const message = `╭─╮\n│𝗹𝗶𝘀𝘁 𝗼𝗳 𝗧𝗪𝗜𝗡𝗞𝗟𝗘 𝗰𝗵𝗮𝘁𝘀🐣🎀:\n${currentList.join(
+          "\n"
+        )}\n╰───────────ꔪ`;
+
+        const sentMessage = await api.sendMessage(message, event.threadID);
+        global.GoatBot.onReply.set(sentMessage.messageID, {
+          commandName: "join",
+          messageID: sentMessage.messageID,
+          author: event.senderID,
+          start,
+        });
+      }
+    } catch (error) {
+      console.error("Error listing group chats", error);
     }
+  },
+
+  onReply: async function ({ api, event, Reply, args }) {
+    const { author, start } = Reply;
+
+    if (event.senderID !== author) {
+      return;
+    }
+
+    const userInput = args.join(" ").trim().toLowerCase();
+
+    try {
+      const groupList = await api.getThreadList(300, null, ["INBOX"]);
+      const filteredList = groupList.filter(
+        (group) => group.threadName !== null || group.name !== null
+      );
+
+      if (userInput === "next") {
+        const nextPageStart = start + 5;
+        if (nextPageStart >= filteredList.length) {
+          api.sendMessage(
+            "End of list reached.",
+            event.threadID,
+            event.messageID
+          );
+          return;
+        }
+
+        const currentList = filteredList
+          .slice(nextPageStart, nextPageStart + 5)
+          .map(
+            (group, index) =>
+              `${nextPageStart + index + 1}. ${group.threadName || group.name}\n𝐓𝐈𝐃: ${group.threadID}`
+          );
+
+        const message = `╭─╮\n│𝗹𝗶𝘀𝘁 𝗼𝗳 𝗧𝗪𝗜𝗡𝗞𝗟𝗘 𝗰𝗵𝗮𝘁𝘀🐣🎀:\n${currentList.join(
+          "\n"
+        )}\n╰───────────ꔪ`;
+
+        const sentMessage = await api.sendMessage(message, event.threadID);
+        global.GoatBot.onReply.set(sentMessage.messageID, {
+          commandName: "join",
+          messageID: sentMessage.messageID,
+          author: event.senderID,
+          start: nextPageStart,
+        });
+      } else if (userInput === "previous") {
+        const prevPageStart = Math.max(start - 5, 0);
+
+        if (prevPageStart < 0) {
+          api.sendMessage(
+            "Already at the beginning of the list.",
+            event.threadID,
+            event.messageID
+          );
+          return;
+        }
+
+        const currentList = filteredList
+          .slice(prevPageStart, prevPageStart + 5)
+          .map(
+            (group, index) =>
+              `${prevPageStart + index + 1}. ${group.threadName || group.name}\n𝐓𝐈𝐃: ${group.threadID}`
+          );
+
+        const message = `╭─╮\n│𝗹𝗶𝘀𝘁 𝗼𝗳 𝗧𝗪𝗜𝗡𝗞𝗟𝗘 𝗰𝗵𝗮𝘁𝘀🐣🎀:\n${currentList.join(
+          "\n"
+        )}\n╰───────────ꔪ`;
+
+        const sentMessage = await api.sendMessage(message, event.threadID);
+        global.GoatBot.onReply.set(sentMessage.messageID, {
+          commandName: "join",
+          messageID: sentMessage.messageID,
+          author: event.senderID,
+          start: prevPageStart,
+        });
+      } else if (!isNaN(userInput)) {
+        const groupIndex = parseInt(userInput, 10);
+        if (groupIndex <= 0 || groupIndex > filteredList.length) {
+          api.sendMessage(
+            "Invalid group number.\nPlease choose a number within the range.",
+            event.threadID,
+            event.messageID
+          );
+          return;
+        }
+
+        const selectedGroup = filteredList[groupIndex - 1];
+        const groupID = selectedGroup.threadID;
+
+        await api.addUserToGroup(event.senderID, groupID);
+        api.sendMessage(
+          `You have joined the group chat: ${selectedGroup.threadName || selectedGroup.name}`,
+          event.threadID,
+          event.messageID
+        );
+      } else {
+        api.sendMessage(
+          'Invalid input.\nPlease provide a valid number or reply with "next" or "previous".',
+          event.threadID,
+          event.messageID
+        );
+      }
+    } catch (error) {
+      console.error("Error handling join command", error);
+      api.sendMessage(
+        "An error occurred while processing your request.",
+        event.threadID,
+        event.messageID
+      );
+    }
+
+    global.GoatBot.onReply.delete(event.messageID);
   },
 };
