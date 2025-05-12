@@ -1,63 +1,40 @@
-const axios = require('axios');
-
-const baseApiUrl = async () => {
-  const base = await axios.get(
-    `https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`
-  );
-  return base.data.api;
-};
+const axios = require("axios");
 
 module.exports = {
-  config: {
-    name: "art",
-    version: "1.6.9",
-    author: "Nazrul",
-    role: 0,
-    description: "{pn} - Enhance your photos with artful transformations!",
-    category: "art",
-    countDown: 5,
-    guide: { 
-      en: "{pn} reply to an image"
-    }
-  },
-  onStart: async function ({ message, event, args, api }) {
-    try {
-      const cp = ["bal","zombie","anime","ghost", "watercolor", "sketch", "abstract", "cartoon","monster"];
-      const prompts = args[0] || cp[Math.floor(Math.random() * cp.length)];
+ config: {
+ name: "art",
+ role: 0,
+ author: "OtinXSandip",
+ countDown: 5,
+ longDescription: "Art images",
+ category: "ai",
+ guide: {
+ en: "${pn} reply to an image with a prompt and choose model 1 - 52"
+ }
+ },
+ onStart: async function ({ message, api, args, event }) {
+ const text = args.join(' ');
 
-      const msg = await api.sendMessage("🎨 Processing your image, please wait...", event.threadID);
+ if (!event.messageReply || !event.messageReply.attachments || !event.messageReply.attachments[0]) {
+ return message.reply("Image URL is missing.");
+ }
 
-      let photoUrl = "";
+ const imgurl = encodeURIComponent(event.messageReply.attachments[0].url);
 
-      if (event.type === "message_reply" && event.messageReply?.attachments?.length > 0) {
-        photoUrl = event.messageReply.attachments[0].url;
-      } else if (args.length > 0) {
-        photoUrl = args.join(' ');
-      }
+ const [prompt, model] = text.split('|').map((text) => text.trim());
+ const puti = model || "37";
 
-      if (!photoUrl) {
-        return api.sendMessage("🔰 Please reply to an image or provide a URL!", event.threadID, event.messageID);
-      }
+ api.setMessageReaction("⏰", event.messageID, () => {}, true);
+ const lado = `https://sandipapi.onrender.com/art?imgurl=${imgurl}&prompt=${encodeURIComponent(prompt)}&model=${puti}`;
 
-      const response = await axios.get(`${await baseApiUrl()}/art2?url=${encodeURIComponent(photoUrl)}&prompt=${encodeURIComponent(prompts)}`);
-
-      if (!response.data || !response.data.imageUrl) {
-        await api.sendMessage("⚠ Failed to return a valid image URL. Please try again.", event.threadID, event.messageID);
-        return;
-      }
-
-      const imageUrl = response.data.imageUrl;
-      await api.unsendMessage(msg.messageID);
-
-      const imageStream = await axios.get(imageUrl, { responseType: 'stream' });
-
-      await api.sendMessage({ 
-        body: `Here's your artful image! 🎨`, 
-        attachment: imageStream.data 
-      }, event.threadID, event.messageID);
-
-    } catch (error) {
-      await api.sendMessage(`Error: ${error.message}`, event.threadID, event.messageID);
-    }
-  }
+ message.reply("✅| Generating please wait.", async (err, info) => {
+ const attachment = await global.utils.getStreamFromURL(lado);
+ message.reply({
+ attachment: attachment
+ });
+ let ui = info.messageID; 
+ message.unsend(ui);
+ api.setMessageReaction("✅", event.messageID, () => {}, true);
+ });
+ }
 };

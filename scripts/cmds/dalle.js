@@ -6,13 +6,13 @@ const baseApiUrl = async () => {
 module.exports = {
   config: {
     name: "dalle",
-    aliases: ["bing", "create", "imagine"],
+    aliases: ["dalle"],
     version: "1.0",
     author: "Dipto",
     countDown: 15,
     role: 0,
     description: "Generate images by Unofficial Dalle3",
-    category: "IMAGE GENERATOR",
+    category: "tool",
     guide: { en: "{pn} prompt" }
   }, 
   onStart: async({ api, event, args }) => {
