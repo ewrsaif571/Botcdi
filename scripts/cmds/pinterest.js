@@ -1,57 +1,92 @@
-const axios = require('axios');
-module.exports.config = {
-  name: "pinterest",
-  aliases: "pin",
-  category: "image",
-  author: "Nyx",
+const axios = require("axios");
+const fs = require("fs-extra");
+const path = require("path");
+const baseApiUrl = async () => {
+    const base = await axios.get(
+        `https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`,
+    );
+    return base.data.api;
 };
 
-module.exports.onStart = async function ({ api, event, args }) {
-  const query = args[0];
-  const limit = parseInt(args[1]) || 30;
+module.exports = {
+    config: {
+        name: "pin",
+        aliases: ["pinterest"],
+        version: "1.0",
+        author: "Dipto",
+        countDown: 15,
+        role: 0,
+        shortDescription: "Pinterest Image Search",
+        longDescription: "Pinterest Image Search",
+        category: "download",
+        guide: {
+            en: "{pn} query",
+        },
+    },
 
-  if (!query) {
-    return api.sendMessage("⚠️ Please provide a search query! Example: pinterest cat 30", event.threadID);
-  }
+    onStart: async function ({ api, event, args }) {
+        const queryAndLength = args.join(" ").split("-");
+        const q = queryAndLength[0].trim();
+        const length = queryAndLength[1].trim();
 
-  if (limit > 40) {
-    return api.sendMessage("⚠️ Limit exceeded! Maximum limit is 40.", event.threadID);
-  }
-
-  try {
-    const response = await axios.get(`https://www.noobz-api.rf.gd/api/pinterest?search=${query}`);
-    const { data } = response.data;
-
-    if (!data || data.length === 0) {
-      return api.sendMessage("❌ No results found for your query.", event.threadID);
-    }
-
-    const selectedImages = data.slice(0, limit);
-    const attachments = await Promise.all(
-      selectedImages.map(async (imageUrl) => {
-        try {
-          return await global.utils.getStreamFromUrl(imageUrl);
-        } catch (err) {
-          console.error(`Ops baka failed to stream image: ${imageUrl}`, err);
-          return null;
+        if (!q || !length) {
+            return api.sendMessage(
+                "❌| Wrong Format",
+                event.threadID,
+                event.messageID,
+            );
         }
-      })
-    );
-    const validAttachments = attachments.filter((stream) => stream !== null);
 
-    if (validAttachments.length === 0) {
-      return api.sendMessage("❌ No valid images to send.", event.threadID);
-    }
-   
-    return api.sendMessage(
-      { attachment: validAttachments },
-      event.threadID,
-      () => {
-        api.sendMessage(`✅ Successfully sent ${validAttachments.length} images for query "${query}".`, event.threadID);
-      }
-    );
-  } catch (error) {
-    console.error(error);
-    return api.sendMessage("❌ Failed to fetch data. Please try again later.", event.threadID);
-  }
+        try {
+            const w = await api.sendMessage("Please wait...", event.threadID);
+            const response = await axios.get(
+                `${await baseApiUrl()}/pinterest?search=${encodeURIComponent(q)}&limit=${encodeURIComponent(length)}`,
+            );
+            const data = response.data.data;
+
+            if (!data || data.length === 0) {
+                return api.sendMessage(
+                    "Empty response or no images found.",
+                    event.threadID,
+                    event.messageID,
+                );
+            }
+
+            const diptoo = [];
+            const totalImagesCount = Math.min(data.length, parseInt(length));
+
+            for (let i = 0; i < totalImagesCount; i++) {
+                const imgUrl = data[i];
+                const imgResponse = await axios.get(imgUrl, {
+                    responseType: "arraybuffer",
+                });
+                const imgPath = path.join(
+                    __dirname,
+                    "dvassests",
+                    `${i + 1}.jpg`,
+                );
+                await fs.outputFile(imgPath, imgResponse.data);
+                diptoo.push(fs.createReadStream(imgPath));
+            }
+
+            await api.unsendMessage(w.messageID);
+            await api.sendMessage(
+                {
+                    body: `
+✅ | Here's Your Query Based images
+🐤 | Total Images Count: ${totalImagesCount}`,
+                    attachment: diptoo,
+                },
+                event.threadID,
+                event.messageID,
+            );
+        } catch (error) {
+            console.error(error);
+            await api.sendMessage(
+                `Error: ${error.message}`,
+                event.threadID,
+                event.messageID,
+            );
+        }
+    },
 };
