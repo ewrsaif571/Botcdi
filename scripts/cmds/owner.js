@@ -5,7 +5,7 @@ const path = require("path");
 
 module.exports = {
   config: {
-    name: "info",
+    name: "owner",
     version: "1.4",
     author: "Ayan mgi 🥰",
     shortDescription: "Display bot and user info with uptime and random Imgur video.",
