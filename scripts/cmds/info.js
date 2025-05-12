@@ -1,113 +1,111 @@
-const fs = require("fs-extra");
-const request = require("request");
+const { execSync } = require("child_process");
+const axios = require("axios");
 const os = require("os");
-const path = require("path");
 
 module.exports = {
   config: {
     name: "info",
-    version: "1.4",
-    author: "Ayan mgi 🥰",
-    shortDescription: "Display bot and user info with uptime and random Imgur video.",
-    longDescription: "Show detailed info about the bot and the user, with uptime and send random Imgur video.",
+    aliases: ["dev"],
+    version: "6.1",
+    author: "UPoL 🐔",
+    role: 0,
+    shortDescription: { en: "Show dev & system info" },
+    longDescription: { en: "Displays developer and bot system details in animated form" },
     category: "info",
-    guide: {
-      en: "[user]",
-    },
+    guide: { en: "{pn}" }
   },
 
-  onStart: async function ({ api, event, args }) {
-    // User Information
-    const userInfo = {
-      name: "SAIF ISLAM",
-      age: "15+",
-      location: "Sirajganj",
-      bio: "Bot & JavaScript Lover | Idk 🙂",
-      botName: "Twinkle 🎀",
-      botVersion: "1.0",
+  onStart: async function ({ api, event }) {
+    const getIP = async () => {
+      try {
+        const res = await axios.get("https://ipinfo.io/json");
+        return res.data.ip || "Unknown";
+      } catch {
+        return "Unknown";
+      }
     };
 
-    // Bot Uptime
-    const botUptime = process.uptime();
-    const botHours = Math.floor(botUptime / 3600);
-    const botMinutes = Math.floor((botUptime % 3600) / 60);
-    const botSeconds = Math.floor(botUptime % 60);
-    const formattedBotUptime = `${botHours}h ${botMinutes}m ${botSeconds}s`;
+    const delay = t => new Promise(r => setTimeout(r, t));
 
-    // System Uptime
-    const systemUptime = os.uptime();
-    const sysDays = Math.floor(systemUptime / (3600 * 24));
-    const sysHours = Math.floor((systemUptime % (3600 * 24)) / 3600);
-    const sysMinutes = Math.floor((systemUptime % 3600) / 60);
-    const sysSeconds = Math.floor(systemUptime % 60);
-    const formattedSystemUptime = `${sysDays}d ${sysHours}h ${sysMinutes}m ${sysSeconds}s`;
+    let pkgs;
+    try {
+      pkgs = (execSync("npm list --depth=0").toString().match(/──/g) || []).length;
+    } catch {
+      pkgs = "Unknown";
+    }
 
-    // Imgur Video Links
-    const imgurLinks = [
-      "https://i.imgur.com/DfTQ5i6.mp4",
-      "https://i.imgur.com/R4iAMnn.mp4",
-      "https://i.imgur.com/9MoSlTY.mp4",
-      "https://i.imgur.com/UiTaUXv.mp4",
-      "https://i.imgur.com/CJsIzBc.mp4",
-      "https://i.imgur.com/iJOz5pv.mp4",
-      "https://i.imgur.com/ayCtv8c.mp4",
-      "https://i.imgur.com/dTFkLfO.mp4",
-      "https://i.imgur.com/Ov9Iq7A.mp4",
+    const sys = {
+      ip: await getIP(),
+      prefix: global.GoatBot?.config?.prefix || "!",
+      botName: global.GoatBot?.config?.botName || "Your Baby",
+      node: process.version,
+      pkgs,
+      dev: "NiRob Islam",
+      nick: "Saif",
+      site: "naii",
+      contact: {
+        fb: "https://www.facebook.com/naruto.uzomaki09",
+        github: "https://github.com/ewrsaif571",
+        telegram: "@nirob_islam01",
+        mail: "md.nirob.11229@gmail.com"
+      },
+      os: {
+        type: os.type(),
+        platform: os.platform(),
+        arch: os.arch(),
+        uptime: Math.floor(os.uptime() / 60) + " mins",
+        totalMem: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
+        freeMem: (os.freemem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
+        hostname: os.hostname(),
+        cpuModel: os.cpus()?.[0]?.model || "Unknown",
+        cpuCount: os.cpus()?.length || "Unknown"
+      }
+    };
+
+    const fullMessage = [
+      `${sys.botName} | System Overview`,
+      ``,
+      ``,
+      `× Developer: ${sys.dev}`,
+      `× Bot Name: ${sys.botName}`,
+      `× Dev Nickname: ${sys.nick}`,
+      `× Prefix: ${sys.prefix}`,
+      `× Node.js Version: ${sys.node}`,
+      `× IP Address: ${sys.ip}`,
+      `× Total Packages: ${sys.pkgs}`,
+      `× Website: ${sys.site}`,
+      ``,
+      ``,
+      `× System Info:`,
+      `• Hostname: ${sys.os.hostname}`,
+      `• OS Type: ${sys.os.type}`,
+      `• Platform: ${sys.os.platform}`,
+      `• Architecture: ${sys.os.arch}`,
+      `• Uptime: ${sys.os.uptime}`,
+      `• CPU: ${sys.os.cpuModel}`,
+      `• CPU Cores: ${sys.os.cpuCount}`,
+      `• Total Memory: ${sys.os.totalMem}`,
+      `• Free Memory: ${sys.os.freeMem}`,
+      ``,
+      ``,
+      `× Contact Info:`,
+      `• Facebook: ${sys.contact.fb}`,
+      `• GitHub: ${sys.contact.github}`,
+      `• Telegram: ${sys.contact.telegram}`,
+      `• Email: ${sys.contact.mail}`,
+      ``,
+      ``,
+      `× Note:`,
+      `Keep develope your coding skill and make something attractive things.`
     ];
 
-    // Pick a random video
-    const randomLink = imgurLinks[Math.floor(Math.random() * imgurLinks.length)];
-    const videoPath = path.join(__dirname, "/cache/randomVideo.mp4");
+    const chunkSize = Math.ceil(fullMessage.length / 5);
+    const sent = await api.sendMessage("☠️ Gathering forbidden data...", event.threadID);
 
-    // Download the random video
-    const downloadVideo = (url, filePath) => {
-      return new Promise((resolve, reject) => {
-        request(url)
-          .pipe(fs.createWriteStream(filePath))
-          .on("close", resolve)
-          .on("error", reject);
-      });
-    };
-
-    try {
-      await downloadVideo(randomLink, videoPath);
-
-      const bodyMsg = `
-Information: 🥷
-
-- Name: ${userInfo.name}
-- Age: ${userInfo.age}
-- Location: ${userInfo.location}
-- Bio: ${userInfo.bio}
-
-Bot Details:
-
-- Bot Name: ${userInfo.botName}
-- Bot Version: ${userInfo.botVersion}
-- Bot Uptime: ${formattedBotUptime}
-
-System Uptime:
-
-- ${formattedSystemUptime}
-
-─────────────────────
-`;
-
-      api.sendMessage(
-        {
-          body: bodyMsg,
-          attachment: fs.createReadStream(videoPath),
-        },
-        event.threadID,
-        () => {
-          // Delete the downloaded video after sending
-          fs.unlinkSync(videoPath);
-        },
-        event.messageID
-      );
-    } catch (err) {
-      console.error(err);
-      api.sendMessage("An error occurred while processing your request.", event.threadID, event.messageID);
+    for (let i = 1; i <= 5; i++) {
+      const chunk = fullMessage.slice(0, i * chunkSize).join("\n");
+      await delay(800);
+      await api.editMessage(chunk, sent.messageID);
     }
-  },
+  }
 };
