@@ -9,7 +9,7 @@ module.exports = {
     version: "1.7",
     cooldowns: 10,
     role: 0,
-    category: "Image gen",
+    category: "Image",
     guide: {
       en: "{p}poli <prompt>"
     }
@@ -32,7 +32,7 @@ module.exports = {
 
       for (let i = 0; i < 4; i++) {
         const enhancedPrompt = `${prompt}, ${styles[i % styles.length]}`;
-        const response = await axios.post("https://mahmud-poli-api.onrender.com/generate", {
+        const response = await axios.post("https://mahmud-poli.onrender.com/generate", {
           prompt: enhancedPrompt
         }, {
           responseType: "arraybuffer",
