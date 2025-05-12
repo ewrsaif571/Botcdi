@@ -1,56 +1,46 @@
 module.exports = {
-  config: {
-    name: "top",
-    version: "1.6",
-    author: "KAMU x gpt🤡",
-    role: 0,
-    shortDescription: {
-      en: "Top 8 Rich Users"
-    },
-    longDescription: {
-      en: ""
-    },
-    category: "group",
-    guide: {
-      en: "{pn}"
-    }
-  },
-  onStart: async function ({ api, args, message, event, usersData }) {
-    const allUsers = await usersData.getAll();
-    
-    // Sort users by money and take top 8
-    const topUsers = allUsers.sort((a, b) => b.money - a.money).slice(0, 8);
+  config: {
+    name: "top",
+    version: "1.4",
+    author: "SAIF x gpt🤡",
+    role: 0,
+    shortDescription: {
+      en: "Top 15 Rich Users"
+    },
+    longDescription: {
+      en: ""
+    },
+    category: "group",
+    guide: {
+      en: "{pn}"
+    }
+  },
+  onStart: async function ({ api, args, message, event, usersData }) {
+    const allUsers = await usersData.getAll();
+    
+    // Sort users by money and take top 15
+    const topUsers = allUsers.sort((a, b) => b.money - a.money).slice(0, 15);
 
-    // Format numbers with abbreviations
-    function formatNumber(num) {
-      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
-      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K";
-      return num.toFixed(2);
-    }
+    // Function to format numbers correctly
+    function formatNumber(num) {
+      if (num >= 1e15) return (num / 1e15).toFixed(2) + "Q"; // Quadrillion
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + "T"; // Trillion
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + "B"; // Billion
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + "M"; // Million
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + "K"; // Thousand
+      return num.toString(); // যদি 1K-এর নিচে হয়, তাহলে নরমাল দেখাবে
+    }
 
-    // Create the leaderboard with added spacing
-    const topUsersList = topUsers.map((user, index) => {
-      const rank = index + 1;
-      const medal = rank === 1 ? "👑" : rank === 2 ? "💎" : rank === 3 ? "💍" : ` ${rank}.`;
-      const name = user.name.length > 12 ? user.name.substring(0, 9) + "..." : user.name;
-      const money = formatNumber(user.money || 0);
-      
-      return `\n${medal} ${name.padEnd(12)} » 💰 ${money.padStart(8)}\n────────────────────`;
-    });
+    // Create leaderboard list
+    const topUsersList = topUsers.map((user, index) => {
+      const moneyFormatted = formatNumber(user.money || 0); // যদি টাকা না থাকে তাহলে "0" দেখাবে
+      const medals = ["🥇", "🥈", "🥉"];
+      return `${medals[index] || `${index + 1}.`} ${user.name} - ${moneyFormatted}`;
+    });
 
-    // Modern message design with spaced list
-    const messageText = `
-╭── ⋅ ⋅ ── ✩ ── ⋅ ⋅ ──╮
-         TOP 8 RICHEST
-╰── ⋅ ⋅ ── ✩ ── ⋅ ⋅ ──╯
-${topUsersList.join("")}
+    // Shortened header and compact design
+    const messageText = `👑 𝗧𝗢𝗣 𝗥𝗜𝗖𝗛𝗘𝗦𝗧 𝗨𝗦𝗘𝗥𝗦 👑\n━━━━━━━━━━━\n${topUsersList.join("\n")}`;
 
-╭── ⋅ ⋅ ── ✩ ── ⋅ ⋅ ──╮
-  💸 𝗪𝗲𝗮𝗹𝘁𝗵 𝗟𝗲𝗮𝗱𝗲𝗿𝗯𝗼𝗮𝗿𝗱 💸
-╰── ⋅ ⋅ ── ✩ ── ⋅ ⋅ ──╯`;
-
-    message.reply(messageText);
-  }
+    message.reply(messageText);
+  }
 };

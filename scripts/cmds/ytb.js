@@ -156,4 +156,4 @@ async function diptoSt(url,pathName) {
 	catch (err) {
 		throw err;
 	}
-			}
+}
