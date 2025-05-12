@@ -7,7 +7,7 @@ module.exports.config = {
   role: 0,
   author: "AYANOKŌJI ",
   description: "PepeXL Image Generator",
-  category: "𝗜𝗠𝗔𝗚𝗘 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗢𝗥",
+  category: "image",
   premium: true,
   guide: "{pn} [prompt]\nExample: {pn} funny pepe meme",
   countDown: 15,
