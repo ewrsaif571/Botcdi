@@ -16,96 +16,120 @@ module.exports = {
   },
 
   onStart: async function ({ api, event }) {
-    const getIP = async () => {
-      try {
-        const res = await axios.get("https://ipinfo.io/json");
-        return res.data.ip || "Unknown";
-      } catch {
-        return "Unknown";
-      }
-    };
-
-    const delay = t => new Promise(r => setTimeout(r, t));
-
-    let pkgs;
     try {
-      pkgs = (execSync("npm list --depth=0").toString().match(/──/g) || []).length;
-    } catch {
-      pkgs = "Unknown";
-    }
+      // Delay helper
+      const delay = ms => new Promise(res => setTimeout(res, ms));
 
-    const sys = {
-      ip: await getIP(),
-      prefix: global.GoatBot?.config?.prefix || "!",
-      botName: global.GoatBot?.config?.botName || "Your Baby",
-      node: process.version,
-      pkgs,
-      dev: "NiRob Islam",
-      nick: "Saif",
-      site: "naii",
-      contact: {
-        fb: "https://www.facebook.com/naruto.uzomaki09",
-        github: "https://github.com/ewrsaif571",
-        telegram: "@nirob_islam01",
-        mail: "md.nirob.11229@gmail.com"
-      },
-      os: {
-        type: os.type(),
-        platform: os.platform(),
-        arch: os.arch(),
-        uptime: Math.floor(os.uptime() / 60) + " mins",
-        totalMem: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
-        freeMem: (os.freemem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
-        hostname: os.hostname(),
-        cpuModel: os.cpus()?.[0]?.model || "Unknown",
-        cpuCount: os.cpus()?.length || "Unknown"
+      // Get external IP safely
+      const getIP = async () => {
+        try {
+          const res = await axios.get("https://ipinfo.io/json");
+          return res.data.ip || "Unknown";
+        } catch (e) {
+          console.error("Failed to fetch IP:", e.message);
+          return "Unknown";
+        }
+      };
+
+      // Get number of installed npm packages
+      let pkgs = "Unknown";
+      try {
+        const npmListOutput = execSync("npm list --depth=0").toString();
+        pkgs = (npmListOutput.match(/──/g) || []).length;
+      } catch (e) {
+        console.error("Failed to get npm packages:", e.message);
       }
-    };
 
-    const fullMessage = [
-      `${sys.botName} | System Overview`,
-      ``,
-      ``,
-      `× Developer: ${sys.dev}`,
-      `× Bot Name: ${sys.botName}`,
-      `× Dev Nickname: ${sys.nick}`,
-      `× Prefix: ${sys.prefix}`,
-      `× Node.js Version: ${sys.node}`,
-      `× IP Address: ${sys.ip}`,
-      `× Total Packages: ${sys.pkgs}`,
-      `× Website: ${sys.site}`,
-      ``,
-      ``,
-      `× System Info:`,
-      `• Hostname: ${sys.os.hostname}`,
-      `• OS Type: ${sys.os.type}`,
-      `• Platform: ${sys.os.platform}`,
-      `• Architecture: ${sys.os.arch}`,
-      `• Uptime: ${sys.os.uptime}`,
-      `• CPU: ${sys.os.cpuModel}`,
-      `• CPU Cores: ${sys.os.cpuCount}`,
-      `• Total Memory: ${sys.os.totalMem}`,
-      `• Free Memory: ${sys.os.freeMem}`,
-      ``,
-      ``,
-      `× Contact Info:`,
-      `• Facebook: ${sys.contact.fb}`,
-      `• GitHub: ${sys.contact.github}`,
-      `• Telegram: ${sys.contact.telegram}`,
-      `• Email: ${sys.contact.mail}`,
-      ``,
-      ``,
-      `× Note:`,
-      `Keep develope your coding skill and make something attractive things.`
-    ];
+      // Prepare system info object
+      const sys = {
+        ip: await getIP(),
+        prefix: global.GoatBot?.config?.prefix || "!",
+        botName: global.GoatBot?.config?.botName || "Your Baby",
+        node: process.version,
+        pkgs,
+        dev: "NiRob Islam",
+        nick: "Saif",
+        site: "naii",
+        contact: {
+          fb: "https://www.facebook.com/naruto.uzomaki09",
+          github: "https://github.com/ewrsaif571",
+          telegram: "@nirob_islam01",
+          mail: "md.nirob.11229@gmail.com"
+        },
+        os: {
+          type: os.type(),
+          platform: os.platform(),
+          arch: os.arch(),
+          uptime: Math.floor(os.uptime() / 60) + " mins",
+          totalMem: (os.totalmem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
+          freeMem: (os.freemem() / 1024 / 1024 / 1024).toFixed(2) + " GB",
+          hostname: os.hostname(),
+          cpuModel: os.cpus()?.[0]?.model || "Unknown",
+          cpuCount: os.cpus()?.length || "Unknown"
+        }
+      };
 
-    const chunkSize = Math.ceil(fullMessage.length / 5);
-    const sent = await api.sendMessage("☠️ Gathering forbidden data...", event.threadID);
+      const fullMessage = [
+        `${sys.botName} | System Overview`,
+        ``,
+        ``,
+        `× Developer: ${sys.dev}`,
+        `× Bot Name: ${sys.botName}`,
+        `× Dev Nickname: ${sys.nick}`,
+        `× Prefix: ${sys.prefix}`,
+        `× Node.js Version: ${sys.node}`,
+        `× IP Address: ${sys.ip}`,
+        `× Total Packages: ${sys.pkgs}`,
+        `× Website: ${sys.site}`,
+        ``,
+        ``,
+        `× System Info:`,
+        `• Hostname: ${sys.os.hostname}`,
+        `• OS Type: ${sys.os.type}`,
+        `• Platform: ${sys.os.platform}`,
+        `• Architecture: ${sys.os.arch}`,
+        `• Uptime: ${sys.os.uptime}`,
+        `• CPU: ${sys.os.cpuModel}`,
+        `• CPU Cores: ${sys.os.cpuCount}`,
+        `• Total Memory: ${sys.os.totalMem}`,
+        `• Free Memory: ${sys.os.freeMem}`,
+        ``,
+        ``,
+        `× Contact Info:`,
+        `• Facebook: ${sys.contact.fb}`,
+        `• GitHub: ${sys.contact.github}`,
+        `• Telegram: ${sys.contact.telegram}`,
+        `• Email: ${sys.contact.mail}`,
+        ``,
+        ``,
+        `× Note:`,
+        `Keep developing your coding skills and make something attractive.`
+      ];
 
-    for (let i = 1; i <= 5; i++) {
-      const chunk = fullMessage.slice(0, i * chunkSize).join("\n");
-      await delay(800);
-      await api.editMessage(chunk, sent.messageID);
+      const chunkSize = Math.ceil(fullMessage.length / 5);
+
+      // Send initial message
+      const sent = await api.sendMessage("☠️ Gathering forbidden data...", event.threadID);
+      if (!sent || !sent.messageID) {
+        console.error("Failed to send initial message or missing messageID.");
+        return;
+      }
+
+      // Animate message by editing in chunks
+      for (let i = 1; i <= 5; i++) {
+        const chunk = fullMessage.slice(0, i * chunkSize).join("\n");
+        await delay(800);
+        try {
+          await api.editMessage(chunk, sent.messageID);
+        } catch (editErr) {
+          console.error("Failed to edit message:", editErr.message);
+          // Fallback: send new message instead of editing
+          await api.sendMessage(chunk, event.threadID);
+        }
+      }
+    } catch (error) {
+      console.error("Error in info command:", error);
+      await api.sendMessage("Something went wrong while fetching info.", event.threadID);
     }
   }
 };
