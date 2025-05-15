@@ -1,12 +1,11 @@
 const chalk = require('chalk');
 const path = require('path');
-const ora = require('ora');
-const { log, getText } = global.utils;
 
 module.exports = async function (api, createLine) {
+  const { log, createOraDots, getText } = global.utils;
+
   console.log(chalk.hex("#f5ab00")(createLine("DATABASE")));
 
-  // ডাটাবেজ কন্ট্রোলার লোড করা
   const controller = await require(path.join(__dirname, '..', '..', 'database/controller/index.js'))(api);
   const {
     threadModel,
@@ -20,54 +19,65 @@ module.exports = async function (api, createLine) {
     sequelize
   } = controller;
 
-  log.info('DATABASE', getText('loadData', 'loadThreadDataSuccess', global.db.allThreadData.filter(t => t.threadID.toString().length > 15).length));
+  log.info('DATABASE', getText('loadData', 'loadThreadDataSuccess', global.db.allThreadData.filter(t => t.threadID?.toString().length > 15).length));
   log.info('DATABASE', getText('loadData', 'loadUserDataSuccess', global.db.allUserData.length));
 
-  if (api && global.GoatBot.config.database.autoSyncWhenStart === true) {
+  if (api && global.GoatBot?.config?.database?.autoSyncWhenStart === true) {
     console.log(chalk.hex("#f5ab00")(createLine("AUTO SYNC")));
 
-    const spinner = ora(getText('loadData', 'refreshingThreadData')).start();
+    let spin;
+    try {
+      spin = createOraDots?.(getText('loadData', 'refreshingThreadData'));
+    } catch {
+      spin = {
+        _start: () => console.log('Refreshing thread data...'),
+        _stop: () => console.log('Refresh complete.')
+      };
+    }
 
     try {
       api.setOptions({ logLevel: 'silent' });
+      spin._start();
 
       const threadDataWillSet = [];
       const allThreadData = [...global.db.allThreadData];
       const allThreadInfo = await api.getThreadList(9999999, null, 'INBOX');
 
       for (const threadInfo of allThreadInfo) {
-        if (threadInfo.isGroup && !allThreadData.some(thread => thread.threadID === threadInfo.threadID)) {
-          threadDataWillSet.push(await threadsData.create(threadInfo.threadID, threadInfo));
+        if (threadInfo.isGroup && !allThreadData.some(t => t.threadID === threadInfo.threadID)) {
+          const created = await threadsData.create(threadInfo.threadID, threadInfo);
+          threadDataWillSet.push(created);
         } else {
-          const threadRefreshed = await threadsData.refreshInfo(threadInfo.threadID, threadInfo);
-          allThreadData.splice(allThreadData.findIndex(thread => thread.threadID === threadInfo.threadID), 1);
-          threadDataWillSet.push(threadRefreshed);
+          const refreshed = await threadsData.refreshInfo(threadInfo.threadID, threadInfo);
+          const index = allThreadData.findIndex(t => t.threadID === threadInfo.threadID);
+          if (index !== -1) allThreadData.splice(index, 1);
+          threadDataWillSet.push(refreshed);
         }
         global.db.receivedTheFirstMessage[threadInfo.threadID] = true;
       }
 
-      const allThreadDataDontHaveBot = allThreadData.filter(thread => !allThreadInfo.some(thread1 => thread.threadID === thread1.threadID));
       const botID = api.getCurrentUserID();
+      const threadWithoutBot = allThreadData.filter(t => !allThreadInfo.some(t1 => t1.threadID === t.threadID));
 
-      for (const thread of allThreadDataDontHaveBot) {
-        const findMe = thread.members.find(m => m.userID == botID);
+      for (const thread of threadWithoutBot) {
+        const findMe = thread.members?.find(m => m.userID == botID);
         if (findMe) {
           findMe.inGroup = false;
           await threadsData.set(thread.threadID, { members: thread.members });
         }
       }
 
-      global.db.allThreadData = [
-        ...threadDataWillSet,
-        ...allThreadDataDontHaveBot
-      ];
+      global.db.allThreadData = [...threadDataWillSet, ...threadWithoutBot];
 
-      spinner.succeed(getText('loadData', 'refreshThreadDataSuccess', global.db.allThreadData.length));
+      spin._stop();
+      log.info('DATABASE', getText('loadData', 'refreshThreadDataSuccess', global.db.allThreadData.length));
     } catch (err) {
-      spinner.fail(getText('loadData', 'refreshThreadDataError'));
-      log.error('DATABASE', getText('loadData', 'refreshThreadDataError'), err);
+      spin._stop?.();
+      log.error('DATABASE', getText('loadData', 'refreshThreadDataError'), err.message || err);
     } finally {
-      api.setOptions({ logLevel: global.GoatBot.config.optionsFca.logLevel });
+      api.setOptions({
+        logLevel: global.GoatBot?.config?.optionsFca?.logLevel || 'info'
+      });
     }
   }
 
