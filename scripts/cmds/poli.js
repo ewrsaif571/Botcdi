@@ -20,7 +20,7 @@ module.exports = {
   onStart: async function ({ api, event, args }) {
     const prompt = args.join(" ");
     if (!prompt) {
-      return api.sendMessage("❗ দয়া করে একটি প্রম্পট লিখুন।\nউদাহরণ: !flux a goat in anime style", event.threadID, event.messageID);
+      return api.sendMessage("Wait Koro baby 😽👉👈।\nউদাহরণ: !poli a goat in anime style", event.threadID, event.messageID);
     }
 
     const loading = await api.sendMessage("⏳ ছবি তৈরি হচ্ছে, একটু অপেক্ষা করুন...", event.threadID);
