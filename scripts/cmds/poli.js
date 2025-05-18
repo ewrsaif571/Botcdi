@@ -1,64 +1,47 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
   config: {
     name: "poli",
-    author: "MahMUD",
-    version: "1.7",
-    cooldowns: 10,
+    version: "3.0",
+    author: "SAIF",
+    countDown: 5,
     role: 0,
-    category: "Image",
+    shortDescription: "Generate AI image ",
+    longDescription: "Create beautiful images directly using prompt",
+    category: "image",
     guide: {
-      en: "{p}poli <prompt>"
+      en: "{pn} [your prompt]"
     }
   },
 
-  onStart: async function ({ message, args, api, event }) {
-    if (args.length === 0) {
-      return api.sendMessage("❌ | Please provide a prompt.", event.threadID, event.messageID);
+  onStart: async function ({ api, event, args }) {
+    const prompt = args.join(" ");
+    if (!prompt) {
+      return api.sendMessage("❗ দয়া করে একটি প্রম্পট লিখুন।\nউদাহরণ: !flux a goat in anime style", event.threadID, event.messageID);
     }
 
-    const prompt = args.join(" ");
-    const cacheDir = path.join(__dirname, "cache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+    const loading = await api.sendMessage("⏳ ছবি তৈরি হচ্ছে, একটু অপেক্ষা করুন...", event.threadID);
 
-    api.sendMessage("𝐖𝐚𝐢𝐭 𝐤𝐨𝐫𝐨 𝐣𝐚𝐧 <😘", event.threadID, event.messageID);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
+    const imagePath = path.join(__dirname, "flux.jpg");
 
     try {
-      const styles = ["ultra detailed", "4k resolution", "realistic lighting", "artstation", "digital painting"];
-      const imagePaths = [];
+      const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      fs.writeFileSync(imagePath, response.data);
 
-      for (let i = 0; i < 4; i++) {
-        const enhancedPrompt = `${prompt}, ${styles[i % styles.length]}`;
-        const response = await axios.post("https://mahmud-poli.onrender.com/generate", {
-          prompt: enhancedPrompt
-        }, {
-          responseType: "arraybuffer",
-          headers: {
-            "author": module.exports.config.author
-          }
-        });
-
-        if (response.data.error) {
-          return message.reply(`❌ | ${response.data.error}`);
-        }
-
-        const filePath = path.join(cacheDir, `generated_${Date.now()}_${i}.png`);
-        fs.writeFileSync(filePath, response.data);
-        imagePaths.push(filePath);
-      }
-
-      const attachments = imagePaths.map(p => fs.createReadStream(p));
-      message.reply({
-        body: "✅ | Here are images generated from your prompt:",
-        attachment: attachments
+      api.sendMessage({
+        body: `✅Hare you're generated image!!"${prompt}"`,
+        attachment: fs.createReadStream(imagePath)
+      }, event.threadID, () => {
+        fs.unlinkSync(imagePath); // delete temp file
+        api.unsendMessage(loading.messageID);
       });
-
-    } catch (error) {
-      console.error("Image generation error:", error);
-      message.reply("❌ | Couldn't generate images. Try again later.");
+    } catch (err) {
+      console.error("Image download failed:", err.message);
+      api.sendMessage("tatah 😔🦵", event.threadID, event.messageID);
     }
   }
 };
