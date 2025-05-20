@@ -14,7 +14,7 @@ module.exports = {
       const query = args.join(' ');
       if (!query) return message.reply('Please provide a search query!');
       const searchResponse = await axios.get(`https://mostakim.onrender.com/mostakim/ytSearch?search=${encodeURIComponent(query)}`);
-      api.setMessageReaction("⏳", event.messageID, () => {}, true);
+      api.setMessageReaction("🐧", event.messageID, () => {}, true);
       const parseDuration = (timestamp) => {
         const parts = timestamp.split(':').map(part => parseInt(part));
         let seconds = 0;
@@ -61,7 +61,7 @@ module.exports = {
         writer.on('finish', resolve);
         writer.on('error', reject);
       });
-api.setMessageReaction("✅", event.messageID, () => {}, true);
+api.setMessageReaction("😏", event.messageID, () => {}, true);
       await message.reply({
         body: `🎧 Now playing: ${selectedVideo.title}\nDuration: ${selectedVideo.timestamp}`,
         attachment: fs.createReadStream(tempFilePath)
