@@ -1,58 +1,77 @@
-const axios = require("axios");
-
-const baseApiUrl = async () => {
-  const base = 'https://mahmud-sing.onrender.com';
-  return base;
-};
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
-    config: {
-        name: "sing",
-        version: "1.7",
-        author: "MahMUD", 
-        countDown: 10,
-        role: 0,
-        category: "music",
-        guide: "{p}sing [query]"
-    },
-
-    onStart: async function ({ api, event, args, message }) {
-        if (args.length === 0) {
-            return message.reply("❌ | Please provide a sing name janu.");
+  config: {
+    name: 'sing',
+    author: 'Nyx',
+    usePrefix: false,
+    category: 'media'
+  },
+  onStart: async ({ event,api,args, message }) => {
+    try {
+      const query = args.join(' ');
+      if (!query) return message.reply('Please provide a search query!');
+      const searchResponse = await axios.get(`https://mostakim.onrender.com/mostakim/ytSearch?search=${encodeURIComponent(query)}`);
+      api.setMessageReaction("⏳", event.messageID, () => {}, true);
+      const parseDuration = (timestamp) => {
+        const parts = timestamp.split(':').map(part => parseInt(part));
+        let seconds = 0;
+        
+        if (parts.length === 3) {
+          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) {
+          seconds = parts[0] * 60 + parts[1];
         }
+        
+        return seconds;
+      };
+      const filteredVideos = searchResponse.data
+        .filter(video => {
+          try {
+            const totalSeconds = parseDuration(video.timestamp);
+            return totalSeconds < 600;
+          } catch {
+            return false;
+          }
+        });
 
-        try {
-            const query = encodeURIComponent(args.join(" "));
-            const apiUrl = `${await baseApiUrl()}/sing?query=${query}`;
+      if (filteredVideos.length === 0) {
+       message.reply('No short videos found (under 10 minutes)!');
+      }
+      const selectedVideo = filteredVideos[0];
+      const tempFilePath = path.join(__dirname, 'temp_audio.m4a');
+      const apiResponse = await axios.get(`https://mostakim.onrender.com/m/sing?url=${selectedVideo.url}`);
+      
+      if (!apiResponse.data.url) {
+        throw new Error('No audio URL found in response');
+      }
 
-            message.reply("𝐖𝐚𝐢𝐭 𝐤𝐨𝐫𝐨 𝐣𝐚𝐧 <😘");
+      const writer = fs.createWriteStream(tempFilePath);
+      const audioResponse = await axios({
+        url: apiResponse.data.url,
+        method: 'GET',
+        responseType: 'stream'
+      });
 
-            const response = await axios.get(apiUrl, {
-                responseType: "stream",
-                headers: { "author": module.exports.config.author }
-            });
+      audioResponse.data.pipe(writer);
+      
+      await new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+api.setMessageReaction("✅", event.messageID, () => {}, true);
+      await message.reply({
+        body: `🎧 Now playing: ${selectedVideo.title}\nDuration: ${selectedVideo.timestamp}`,
+        attachment: fs.createReadStream(tempFilePath)
+      });
+      fs.unlink(tempFilePath, (err) => {
+        if (err) message.reply('Error deleting temp file:', err);
+      });
 
-            console.log("Response:", response);
-
-            if (response.data.error) {
-                return message.reply(`❌ Error: ${response.data.error}`);
-            }
-
-            message.reply({
-                body: `✅ Here's your song: ${args.join(" ")}`,
-                attachment: response.data
-            });
-
-        } catch (error) {
-            console.error("Error:", error.message);
-
-            if (error.response) {
-                console.error("Response error data:", error.response.data);
-                console.error("Response status:", error.response.status);
-                return message.reply(`❌ Error: ${error.response.data.error || error.message}`);
-            }
-
-            message.reply("❌ An error occurred while processing your request.");
-        }
+    } catch (error) {
+      message.reply(`Error: ${error.message}`);
     }
+  }
 };
