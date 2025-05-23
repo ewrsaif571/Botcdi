@@ -16,10 +16,10 @@ module.exports = {
       try {
         console.log('Sender ID:', event.senderID);
 
-        const permission = ["61559946582981"];
+        const permission = ["61572403596870", "61576471072700", "100072164227356"];
         if (!permission.includes(event.senderID)) {
           return api.sendMessage(
-            "আমি শুধু আমার বস রিমনকে respect  করি আর কাউকে না 🐰😾 ",
+            "Jah ABCD 🐰😾 ",
             event.threadID,
             event.messageID
           );
