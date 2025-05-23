@@ -20,7 +20,7 @@ module.exports = {
     },
   },
   onStart: async function ({ api, args, message, event }) {
-    const permission = ["61559946582981"];
+    const permission = ["61572403596870", "61576471072700"];
     if (!permission.includes(event.senderID)) {
       api.sendMessage(
         "only my twinkle owner can use this cmd🐣",
