@@ -3,31 +3,41 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "meme",
-    aliases: ["randommeme"],
-    version: "0.1",
-    role: 0,
-    author: "Noob_DEVS",
-    description: "Get a random meme",
-    category: "fun",
-    countDown: 5,
+    version: "1.0",
+    author: "null",
+    shortDescription: "Send a random meme",
+    category: "fun"
   },
 
-  onStart: async function ({ message, event, api }) {
+  onStart: async function({ api, event }) {
     try {
-      const response = await axios.get("https://www.noobz-api.rf.gd/api/meme");
+      const apis = [
+        "https://meme-api.com/gimme",
+        "https://some-random-api.ml/meme",
+        "https://api.imgflip.com/get_memes"
+      ];
 
-      const memeUrl = response.data.url;
-      const memeDescription =
-        response.data.description || "🐔 Here's a random meme!";
-      if (!memeUrl) return message.reply("❌ Failed to fetch meme.");
+      const apiUrl = apis[Math.floor(Math.random() * apis.length)];
 
-      const attachment = await global.utils.getStreamFromURL(memeUrl);
-      await message.reply({ body: memeDescription, attachment });
+      let memeUrl = "";
+
+      if (apiUrl.includes("imgflip")) {
+        const res = await axios.get(apiUrl);
+        const memes = res.data.data.memes;
+        const meme = memes[Math.floor(Math.random() * memes.length)];
+        memeUrl = meme.url;
+      } else {
+        const res = await axios.get(apiUrl);
+        memeUrl = res.data.url || res.data.image || res.data.meme || res.data.memes;
+      }
+
+      if (!memeUrl) return api.sendMessage("❌ Could not fetch meme.", event.threadID);
+
+      api.sendMessage({ body: "Here's a meme for you🐥", attachment: await global.utils.getStreamFromURL(memeUrl) }, event.threadID);
+
     } catch (error) {
-      console.error("❌ Meme API Request Failed:", error);
-      message.reply(
-        "❌ Error: " + (error.response?.data?.message || error.message)
-      );
+      console.error(error);
+      api.sendMessage("❌ Error fetching meme, try again later.", event.threadID);
     }
-  },
+  }
 };
