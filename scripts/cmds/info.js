@@ -47,7 +47,7 @@ module.exports = {
         botName: global.GoatBot?.config?.botName || "Your Baby",
         node: process.version,
         pkgs,
-        dev: "NiRob Islam",
+        dev: "NiRoB Islam",
         nick: "Saif",
         site: "naii",
         contact: {
