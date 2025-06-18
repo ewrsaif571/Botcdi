@@ -60,7 +60,7 @@ function calculateWinnings([a,b,c], bet) {
 }
 
 function formatResult([a,b,c], winnings, getLang) {
-  const slotDisplay = `🎀\n»𝗴𝗮𝗺𝗲 𝗿𝗲𝘀𝘂𝗹𝘁 [ ${a} | ${b} | ${c} ]`; 
+  const slotDisplay = `🧸\n»𝗴𝗮𝗺𝗲 𝗿𝗲𝘀𝘂𝗹𝘁 [ ${a} | ${b} | ${c} ]`; 
   const formattedWinnings = formatMoney(Math.abs(winnings));
 
   if (a === b && b === c) {
