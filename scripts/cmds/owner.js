@@ -6,44 +6,58 @@ const path = require("path");
 module.exports = {
   config: {
     name: "owner",
-    version: "1.4",
+    version: "1.5",
     author: "Ayan mgi 🥰",
-    shortDescription: "Display bot and user info with uptime and random Imgur video.",
-    longDescription: "Show detailed info about the bot and the user, with uptime and send random Imgur video.",
+    shortDescription: "Display bot, system and user info with random Imgur video.",
+    longDescription: "Show detailed info about bot, system and user, and send a random Imgur video.",
     category: "owner",
     guide: {
       en: "[user]",
     },
   },
 
-  onStart: async function ({ api, event, args }) {
-    // User Information
+  onStart: async function ({ api, event }) {
     const userInfo = {
-      name: "NIROB ISLAM",
+      name: "Nirob Islam",
       nick: "piku ˢᵃⁱᶠ",
       age: "16",
       location: "Sirajganj",
-      bio: "Bot & JavaScript Lover | Goffen nai 😭",
-      botName: "Your Baby 🎀",
-      botVersion: "1.0",
+      fb: "https://www.facebook.com/saif.boch404",
+      botName: "Your Baby",
+      botVersion: "1.0"
     };
 
-    // Bot Uptime
-    const botUptime = process.uptime();
-    const botHours = Math.floor(botUptime / 3600);
-    const botMinutes = Math.floor((botUptime % 3600) / 60);
-    const botSeconds = Math.floor(botUptime % 60);
-    const formattedBotUptime = `${botHours}h ${botMinutes}m ${botSeconds}s`;
+    const formatTime = (sec) => {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      return `${h}h ${m}m ${s}s`;
+    };
 
-    // System Uptime
-    const systemUptime = os.uptime();
-    const sysDays = Math.floor(systemUptime / (3600 * 24));
-    const sysHours = Math.floor((systemUptime % (3600 * 24)) / 3600);
-    const sysMinutes = Math.floor((systemUptime % 3600) / 60);
-    const sysSeconds = Math.floor(systemUptime % 60);
-    const formattedSystemUptime = `${sysDays}d ${sysHours}h ${sysMinutes}m ${sysSeconds}s`;
+    const formatSystemUptime = (sec) => {
+      const d = Math.floor(sec / 86400);
+      const h = Math.floor((sec % 86400) / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      return `${d}d ${h}h ${m}m ${s}s`;
+    };
 
-    // Imgur Video Links
+    const now = new Date();
+    const currentTime = now.toLocaleString("en-GB", { hour12: false });
+
+    const memoryTotal = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2) + " GB";
+    const memoryFree = (os.freemem() / 1024 / 1024 / 1024).toFixed(2) + " GB";
+
+    const cpuInfo = os.cpus()?.[0]?.model || "Unknown";
+    const cpuCount = os.cpus()?.length || "Unknown";
+
+    const platform = os.platform();
+    const arch = os.arch();
+    const hostname = os.hostname();
+
+    const botUptime = formatTime(process.uptime());
+    const sysUptime = formatSystemUptime(os.uptime());
+
     const imgurLinks = [
       "https://i.imgur.com/DfTQ5i6.mp4",
       "https://i.imgur.com/R4iAMnn.mp4",
@@ -56,11 +70,9 @@ module.exports = {
       "https://i.imgur.com/Ov9Iq7A.mp4",
     ];
 
-    // Pick a random video
     const randomLink = imgurLinks[Math.floor(Math.random() * imgurLinks.length)];
-    const videoPath = path.join(__dirname, "/cache/randomVideo.mp4");
+    const videoPath = path.join(__dirname, "cache", "randomVideo.mp4");
 
-    // Download the random video
     const downloadVideo = (url, filePath) => {
       return new Promise((resolve, reject) => {
         request(url)
@@ -74,42 +86,45 @@ module.exports = {
       await downloadVideo(randomLink, videoPath);
 
       const bodyMsg = `
-Information: 🥷
+Owner Info 🎀:
+- Name        : ${userInfo.name}
+- Nickname    : ${userInfo.nick}
+- Age         : ${userInfo.age}
+- Location    : ${userInfo.location}
+- Facebook    : ${userInfo.fb}
 
-- Name: ${userInfo.name}
-- Age: ${userInfo.age}
-- Nickname: &{userInfo.nick}
-- Location: ${userInfo.location}
-- Bio: ${userInfo.bio}
+Bot Info:
+- Name        : ${userInfo.botName}
+- Version     : ${userInfo.botVersion}
+- Uptime      : ${botUptime}
+- Time Now    : ${currentTime}
 
-Bot Details:
-
-- Bot Name: ${userInfo.botName}
-- Bot Version: ${userInfo.botVersion}
-- Bot Uptime: ${formattedBotUptime}
-
-System Uptime:
-
-- ${formattedSystemUptime}
-
-─────────────────────
+System Info:
+- Uptime      : ${sysUptime}
+- Hostname    : ${hostname}
+- Platform    : ${platform} (${arch})
+- CPU         : ${cpuInfo}
+- CPU Cores   : ${cpuCount}
+- Total RAM   : ${memoryTotal}
+- Free RAM    : ${memoryFree}
 `;
 
       api.sendMessage(
         {
-          body: bodyMsg,
-          attachment: fs.createReadStream(videoPath),
+          body: bodyMsg.trim(),
+          attachment: fs.createReadStream(videoPath)
         },
         event.threadID,
         () => {
-          // Delete the downloaded video after sending
-          fs.unlinkSync(videoPath);
+          fs.unlink(videoPath, err => {
+            if (err) console.error("Failed to delete video:", err);
+          });
         },
         event.messageID
       );
     } catch (err) {
-      console.error(err);
-      api.sendMessage("An error occurred while processing your request.", event.threadID, event.messageID);
+      console.error("Error in owner command:", err);
+      api.sendMessage("Something went wrong while loading the owner info.", event.threadID, event.messageID);
     }
-  },
+  }
 };
