@@ -20,7 +20,7 @@ const modelList = [
 ];
 
 module.exports = {
- config: {
+ config: { 
  name: "lazy",
  version: "1.0",
  author: "Renz",
