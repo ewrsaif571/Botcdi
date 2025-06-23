@@ -13,7 +13,7 @@ module.exports = {
             vi: "{p}{n}",
             en: "{p}{n}"
         }
-    },
+    }, 
 
     onStart: async function ({ event, api }) {
         const today = new Date();
