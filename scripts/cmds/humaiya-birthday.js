@@ -47,7 +47,7 @@ module.exports = {
 » ${minutes} minutes  
 » ${seconds} seconds
 ━━━━━━━━━━━━━━━━━━━━━━`;
-
+ 
         return api.sendMessage(countdownMessage, event.threadID, event.messageID);
     }
 };
