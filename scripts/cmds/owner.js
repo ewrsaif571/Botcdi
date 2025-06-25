@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+.cmd install owner.js const fs = require("fs-extra");
 const request = require("request");
 const os = require("os");
 const path = require("path");
@@ -86,27 +86,27 @@ module.exports = {
       await downloadVideo(randomLink, videoPath);
 
       const bodyMsg = `
-Owner Info 🎀:
-- Name        : ${userInfo.name}
-- Nickname    : ${userInfo.nick}
-- Age         : ${userInfo.age}
-- Location    : ${userInfo.location}
-- Facebook    : ${userInfo.fb}
+𝗢𝘄𝗻𝗲𝗿 𝗜𝗻𝗳𝗼 🥷
+•𝐍𝐚𝐦𝐞 :${userInfo.name}
+•𝐍𝐢𝐜𝐤𝐧𝐚𝐦𝐞 :${userInfo.nick}
+•𝐀𝐠𝐞 :${userInfo.age}
+•𝐋𝐨𝐜𝐚𝐭𝐢𝐨𝐧 :${userInfo.location}
+•𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 :${userInfo.fb}
 
-Bot Info:
-- Name        : ${userInfo.botName}
-- Version     : ${userInfo.botVersion}
-- Uptime      : ${botUptime}
-- Time Now    : ${currentTime}
+𝗕𝗼𝘁 𝗜𝗻𝗳𝗼
+•𝐍𝐚𝐦𝐞 :${userInfo.botName}
+•𝐕𝐞𝐫𝐬𝐢𝐨𝐧 :${userInfo.botVersion}
+•𝐔𝐩𝐭𝐢𝐦𝐞 :${botUptime}
+•𝐓𝐢𝐦𝐞 𝐧𝐨𝐰 :${currentTime}
 
-System Info:
-- Uptime      : ${sysUptime}
-- Hostname    : ${hostname}
-- Platform    : ${platform} (${arch})
-- CPU         : ${cpuInfo}
-- CPU Cores   : ${cpuCount}
-- Total RAM   : ${memoryTotal}
-- Free RAM    : ${memoryFree}
+𝗦𝘆𝘀𝘁𝗲𝗺 𝗜𝗻𝗳𝗼
+•𝐔𝐩𝐭𝐢𝐦𝐞 :${sysUptime}
+•𝐇𝐨𝐚𝐬𝐭 :${hostname}
+•𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 :${platform} (${arch})
+•𝐂𝐩𝐮 :${cpuInfo}
+•𝐂𝐩𝐮 𝐜𝐨𝐫𝐞𝐬 :${cpuCount}
+•𝐓𝐨𝐭𝐚𝐥 𝐑𝐀𝐌 :${memoryTotal}
+•𝐅𝐫𝐞𝐞 𝐑𝐀𝐌 :${memoryFree}
 `;
 
       api.sendMessage(
