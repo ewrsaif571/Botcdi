@@ -27,7 +27,7 @@
     "whiteListIds": [],
     "notes": "if you enable this feature, only the ids in the whiteListIds section can use the bot"
   },
-  "nickNameBot": "Shaylaa !<🧸",
+  "nickNameBot": "𝗛𝗜'𝗡𝗔'𝗧𝗔 🐾",
   "prefix": ".",
   "database": {
     "type": "mongodb",
