@@ -29,7 +29,7 @@ module.exports = {
         const t = finalTargetDate - now;
 
         if (t <= 0) {
-            return api.sendMessage("🎉🎂 Happy Birthday Humaiya SAIF er future wife!!🌚🍼", event.threadID, event.messageID);
+            return api.sendMessage("🎉🎂 Happy Birthday dear Humaiya Saif's future wife!!🌚🍼", event.threadID, event.messageID);
         }
 
         const seconds = Math.floor((t / 1000) % 60);
