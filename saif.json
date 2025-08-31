@@ -1,1 +1,10 @@
-
+{
+  "uptime": {
+    "title": "🚀 Bot Uptime",
+    "prefix": "⏳ Current uptime:",
+    "suffix": "🔥 Always online!",
+    "style": {
+      "line": "------------------------"
+    }
+  }
+}
